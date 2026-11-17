@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin | Mathi Kamala Arts</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#FAF7F2;color:#1A1A1A;font-size:14px}
+header{background:#121212;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:16px;letter-spacing:.08em}
+nav{display:flex;gap:6px;padding:12px 20px;background:#fff;border-bottom:1px solid #E8E3DA}
+nav button{padding:8px 16px;border:1px solid #E8E3DA;background:#fff;cursor:pointer}
+nav button.on{background:#B8975A;color:#fff;border-color:#B8975A}
+main{padding:20px;max-width:1100px;margin:auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.card{background:#fff;border:1px solid #E8E3DA;padding:16px}
+.card b{font-size:26px;color:#B8975A;display:block}
+form{background:#fff;border:1px solid #E8E3DA;padding:16px;margin-bottom:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+input,select,textarea{padding:8px;border:1px solid #ccc;width:100%;font:inherit}
+.full{grid-column:1/-1}
+.btn{padding:8px 14px;border:0;background:#B8975A;color:#fff;cursor:pointer}
+.btn.d{background:#b33}.btn.g{background:#555}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{padding:9px;border:1px solid #E8E3DA;text-align:left;vertical-align:top}
+th{background:#f3eee5}
+.wrap{overflow-x:auto}
+.hide{display:none}
+#login{max-width:320px;margin:15vh auto;background:#fff;padding:24px;border:1px solid #E8E3DA;display:block}
+#login h2{margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h2>Admin Login</h2>
+  <input type="password" id="pw" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
+  <button class="btn" style="margin-top:10px;width:100%" onclick="login()">Login</button>
+  <p id="err" style="color:#b33;margin-top:8px"></p>
+</div>
+
+<div id="app" class="hide">
+<header><h1>MATHI KAMALA ARTS — ADMIN</h1><button class="btn g" onclick="logout()">Logout</button></header>
+<nav>
+  <button data-t="dash" class="on">Dashboard</button>
+  <button data-t="prod">Products</button>
+  <button data-t="ord">Custom Orders</button>
+  <button data-t="data">Backup</button>
+</nav>
+<main>
+
+<section id="dash">
+  <div class="cards">
+    <div class="card"><b id="sProd">0</b>Products</div>
+    <div class="card"><b id="sOrd">0</b>Orders</div>
+    <div class="card"><b id="sNew">0</b>New orders</div>
+    <div class="card"><b id="sVal">₹0</b>Catalog value</div>
+  </div>
+</section>
+
+<section id="prod" class="hide">
+  <form id="pForm">
+    <input type="hidden" id="pId">
+    <input id="pName" placeholder="Name" required>
+    <input id="pNameTa" placeholder="Tamil name">
+    <input id="pCat" placeholder="Category (Murugan, Ganesha...)" required>
+    <input id="pSize" placeholder="Size (3.5 Feet)">
+    <input id="pFinish" placeholder="Finish">
+    <input id="pPrice" type="number" placeholder="Price" required>
+    <input id="pOld" type="number" placeholder="Old price">
+    <input id="pTag" placeholder="Tag (NEW)">
+    <input id="pFile" placeholder="Image file (murugan.jpg)">
+    <div class="full"><button class="btn" id="pSave">Add Product</button> <button type="button" class="btn g" onclick="resetP()">Clear</button></div>
+  </form>
+  <div class="wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Size</th><th>Finish</th><th>Price</th><th>Tag</th><th></th></tr></thead><tbody id="pBody"></tbody></table></div>
+</section>
+
+<section id="ord" class="hide">
+  <form id="oForm">
+    <input id="oName" placeholder="Customer name" required>
+    <input id="oPhone" placeholder="Phone" required>
+    <input id="oDeity" placeholder="Deity / form" required>
+    <input id="oSize" placeholder="Height">
+    <input id="oFinish" placeholder="Finish">
+    <input id="oDate" type="date">
+    <input id="oAmt" type="number" placeholder="Quoted amount">
+    <textarea id="oNotes" class="full" placeholder="Notes"></textarea>
+    <div class="full"><button class="btn">Add Order</button></div>
+  </form>
+  <div class="wrap"><table><thead><tr><th>Date</th><th>Customer</th><th>Deity</th><th>Details</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody id="oBody"></tbody></table></div>
+</section>
+
+<section id="data" class="hide">
+  <div class="card">
+    <p style="margin-bottom:10px">Data is saved in this browser. Export regularly.</p>
+    <button class="btn" onclick="exportData()">Export JSON</button>
+    <input type="file" id="imp" accept=".json" style="margin-top:10px">
+    <button class="btn g" style="margin-top:10px" onclick="importData()">Import JSON</button>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+const PASSWORD = "admin123"; // change this
+const K = {p:"mka_products", o:"mka_orders", a:"mka_auth"};
+const seed = [
+ {id:1,name:"LORD MURUGAN WITH VEL",nameTa:"",category:"Murugan",size:"3.5 Feet",finish:"Vibrant Temple Paint",price:18500,oldPrice:22000,tag:"NEW",file:"murugan-vel.jpg"},
+ {id:2,name:"RAJA GANAPATHI VIGRAHAM",nameTa:"",category:"Ganesha",size:"2.5 Feet",finish:"Antique Bronze",price:14000,oldPrice:16500,tag:"PAINTED",file:"raja-ganapathi.jpg"}
+];
+const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+let products=load(K.p,seed), orders=load(K.o,[]);
+const save=()=>{localStorage.setItem(K.p,JSON.stringify(products));localStorage.setItem(K.o,JSON.stringify(orders))};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const inr=n=>"₹"+Number(n||0).toLocaleString("en-IN");
+
+function login(){
+  if($("pw").value===PASSWORD){sessionStorage.setItem(K.a,"1");show()}
+  else $("err").textContent="Wrong password";
+}
+function logout(){sessionStorage.removeItem(K.a);location.reload()}
+function show(){$("login").classList.add("hide");$("app").classList.remove("hide");render()}
+if(sessionStorage.getItem(K.a))show();
+
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));b.classList.add("on");
+  ["dash","prod","ord","data"].forEach(t=>$(t).classList.toggle("hide",t!==b.dataset.t));
+});
+
+function render(){
+  $("sProd").textContent=products.length;
+  $("sOrd").textContent=orders.length;
+  $("sNew").textContent=orders.filter(o=>o.status==="New").length;
+  $("sVal").textContent=inr(products.reduce((s,p)=>s+Number(p.price||0),0));
+  $("pBody").innerHTML=products.map(p=>`<tr><td>${p.id}</td><td>${esc(p.name)}<br><small>${esc(p.nameTa)}</small></td><td>${esc(p.category)}</td><td>${esc(p.size)}</td><td>${esc(p.finish)}</td><td>${inr(p.price)}</td><td>${esc(p.tag)}</td><td><button class="btn" onclick="editP(${p.id})">Edit</button> <button class="btn d" onclick="delP(${p.id})">Del</button></td></tr>`).join("")||`<tr><td colspan="8">No products</td></tr>`;
+  $("oBody").innerHTML=orders.map(o=>`<tr><td>${esc(o.date)}</td><td>${esc(o.name)}<br>${esc(o.phone)}</td><td>${esc(o.deity)}</td><td>${esc(o.size)} ${esc(o.finish)}<br><small>${esc(o.notes)}</small></td><td>${inr(o.amount)}</td><td><select onchange="setStatus(${o.id},this.value)">${["New","Quoted","In Progress","Delivered","Cancelled"].map(s=>`<option ${s===o.status?"selected":""}>${s}</option>`).join("")}</select></td><td><button class="btn d" onclick="delO(${o.id})">Del</button></td></tr>`).join("")||`<tr><td colspan="7">No orders</td></tr>`;
+}
+
+$("pForm").onsubmit=e=>{
+  e.preventDefault();
+  const p={name:$("pName").value.trim(),nameTa:$("pNameTa").value.trim(),category:$("pCat").value.trim(),size:$("pSize").value.trim(),finish:$("pFinish").value.trim(),price:+$("pPrice").value,oldPrice:+$("pOld").value||0,tag:$("pTag").value.trim(),file:$("pFile").value.trim()};
+  const id=+$("pId").value;
+  if(id){products=products.map(x=>x.id===id?{...p,id}:x)}
+  else{p.id=products.reduce((m,x)=>Math.max(m,x.id),0)+1;products.push(p)}
+  save();resetP();render();
+};
+function editP(id){
+  const p=products.find(x=>x.id===id);
+  $("pId").value=p.id;$("pName").value=p.name;$("pNameTa").value=p.nameTa||"";$("pCat").value=p.category;$("pSize").value=p.size||"";$("pFinish").value=p.finish||"";$("pPrice").value=p.price;$("pOld").value=p.oldPrice||"";$("pTag").value=p.tag||"";$("pFile").value=p.file||"";
+  $("pSave").textContent="Update Product";scrollTo(0,0);
+}
+function resetP(){$("pForm").reset();$("pId").value="";$("pSave").textContent="Add Product"}
+function delP(id){if(confirm("Delete product?")){products=products.filter(x=>x.id!==id);save();render()}}
+
+$("oForm").onsubmit=e=>{
+  e.preventDefault();
+  orders.unshift({id:Date.now(),date:$("oDate").value||new Date().toISOString().slice(0,10),name:$("oName").value.trim(),phone:$("oPhone").value.trim(),deity:$("oDeity").value.trim(),size:$("oSize").value.trim(),finish:$("oFinish").value.trim(),amount:+$("oAmt").value||0,notes:$("oNotes").value.trim(),status:"New"});
+  save();$("oForm").reset();render();
+};
+function setStatus(id,s){orders=orders.map(o=>o.id===id?{...o,status:s}:o);save();render()}
+function delO(id){if(confirm("Delete order?")){orders=orders.filter(o=>o.id!==id);save();render()}}
+
+function exportData(){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify({products,orders},null,2)],{type:"application/json"}));
+  a.download="mka-backup.json";a.click();
+}
+function importData(){
+  const f=$("imp").files[0];if(!f)return alert("Choose a file");
+  const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);products=d.products||[];orders=d.orders||[];save();render();alert("Imported")}catch(e){alert("Invalid file")}};
+  r.readAsText(f);
+}
+</script>
+</body>
+</html>
